@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost/test_db
+    username: postgres
+    password: postgres
+  flyway:
+    locations: "classpath:db/migration"
+    #https://flywaydb.org/documentation/configuration/parameters/baselineOnMigrate
+    baselineOnMigrate: true
