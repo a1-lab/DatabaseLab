@@ -1,10 +1,10 @@
-package org.a1lab.flaywaymigration;
+package org.a1lab.flywaymigration;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class FlaywayMigrationApplicationTests {
+class FlywayMigrationApplicationTests {
 
 	@Test
 	void contextLoads() {

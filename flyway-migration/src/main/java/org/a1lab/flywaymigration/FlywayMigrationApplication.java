@@ -1,4 +1,4 @@
-package org.a1lab.flaywaymigration;
+package org.a1lab.flywaymigration;
 
 import org.flywaydb.core.Flyway;
 import org.springframework.boot.CommandLineRunner;
@@ -6,10 +6,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class FlaywayMigrationApplication implements CommandLineRunner {
+public class FlywayMigrationApplication implements CommandLineRunner {
 
     public static void main(String[] args) {
-        SpringApplication.run(FlaywayMigrationApplication.class, args);
+        SpringApplication.run(FlywayMigrationApplication.class, args);
     }
 
     @Override
@@ -19,6 +19,7 @@ public class FlaywayMigrationApplication implements CommandLineRunner {
             .locations("classpath:db/migration")
             .baselineOnMigrate(true)
             .skipDefaultResolvers(true)
+            .resolvers("org.a1lab.flywaymigration.resolver.A1SqlMigrationResolver")
             .load();
 
 		flyway.migrate();
