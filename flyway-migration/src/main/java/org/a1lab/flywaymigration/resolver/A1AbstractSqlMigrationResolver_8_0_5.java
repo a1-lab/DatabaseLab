@@ -52,14 +52,7 @@ public abstract class A1AbstractSqlMigrationResolver_8_0_5 implements MigrationR
     protected void initResolver(Context context) {
         LOG.debug("init custom migration resolver");
 
-        // This is available since flyway 9.10.
-        //this.configuration = context.configuration;
-        //this.resourceProvider = context.resourceProvider;
-        //this.sqlScriptFactory = context.sqlScriptFactory;
-        //this.sqlScriptExecutorFactory = context.sqlScriptExecutorFactory;
-
         this.configuration = context.getConfiguration();
-
         this.resourceProvider = new Scanner<>(JavaMigration.class,
             Arrays.asList(this.configuration.getLocations()), this.configuration.getClassLoader(),
             this.configuration.getEncoding(), this.configuration.isDetectEncoding(),
@@ -114,11 +107,11 @@ public abstract class A1AbstractSqlMigrationResolver_8_0_5 implements MigrationR
         }
     }
 
-    protected Optional<MigrationVersion> getMaxMigrationVersion(String prefix, String[] suffixes) {
+    protected Optional<MigrationVersion> getMaxBaselineMigrationVersion(String[] suffixes) {
         ResourceNameParser resourceNameParser = new ResourceNameParser(configuration);
 
-        List<MigrationVersion> versions = resourceProvider.getResources(prefix, suffixes).stream()
-            .map(lr -> getFilename(prefix, lr.getFilename()))
+        List<MigrationVersion> versions = resourceProvider.getResources(BASELINE_MIGRATION_PREFIX, suffixes).stream()
+            .map(lr -> getFilename(BASELINE_MIGRATION_PREFIX, lr.getFilename()))
             .map(resourceNameParser::parse)
             .map(ResourceName::getVersion)
             .sorted()

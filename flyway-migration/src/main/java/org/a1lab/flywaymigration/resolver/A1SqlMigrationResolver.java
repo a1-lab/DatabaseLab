@@ -26,10 +26,7 @@ public class A1SqlMigrationResolver extends A1AbstractSqlMigrationResolver_8_0_5
         List<ResolvedMigration> migrations = new ArrayList<>();
         String[] suffixes = configuration.getSqlMigrationSuffixes();
 
-        Optional<MigrationVersion> baselineMaxMigration = getMaxMigrationVersion(BASELINE_MIGRATION_PREFIX, suffixes);
-        Optional<MigrationVersion> maxVersion = getMaxAppliedVersion();
-
-        if (!maxVersion.isPresent() && baselineMaxMigration.isPresent()) {
+        if (applyBaselineMigration(suffixes)) {
             //empty schema, baseline migration present, apply it
             addMigrations(migrations, BASELINE_MIGRATION_PREFIX, suffixes, A1MigrationType.BASELINE);
         } else {
@@ -57,5 +54,12 @@ public class A1SqlMigrationResolver extends A1AbstractSqlMigrationResolver_8_0_5
         }
 
         return Optional.empty();
+    }
+
+    private boolean applyBaselineMigration(String[] suffixes) {
+        Optional<MigrationVersion> baselineMaxMigration = getMaxBaselineMigrationVersion(suffixes);
+        Optional<MigrationVersion> maxVersion = getMaxAppliedVersion();
+
+        return (!maxVersion.isPresent() && baselineMaxMigration.isPresent());
     }
 }
