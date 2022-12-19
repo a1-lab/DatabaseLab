@@ -29,9 +29,11 @@ import org.flywaydb.core.internal.sqlscript.SqlScriptFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 //flyway-core 8.0.5
 public abstract class A1AbstractSqlMigrationResolver_8_0_5 implements MigrationResolver {
@@ -68,7 +70,7 @@ public abstract class A1AbstractSqlMigrationResolver_8_0_5 implements MigrationR
         ResourceNameParser resourceNameParser = new ResourceNameParser(configuration);
 
         for (LoadableResource resource : resourceProvider.getResources(prefix, suffixes)) {
-            String filename = getFilename(prefix, resource.getFilename());
+            String filename = convertFilename(prefix, resource.getFilename());
             ResourceName resourceName = resourceNameParser.parse(filename);
 
             if (!resourceName.isValid() || isSqlCallback(resourceName)) {
@@ -93,7 +95,7 @@ public abstract class A1AbstractSqlMigrationResolver_8_0_5 implements MigrationR
         }
     }
 
-    private String getFilename(String prefix, String filename) {
+    private String convertFilename(String prefix, String filename) {
         // flyway community addition does not support baseline migrations (started with "B" prefix).
         // This is in particular means that resourceNameParser::parse does not parse filenames starting with "B".
         // So, we do a trick, pretend to be a regular versioned migration.
@@ -107,17 +109,30 @@ public abstract class A1AbstractSqlMigrationResolver_8_0_5 implements MigrationR
         }
     }
 
-    protected Optional<MigrationVersion> getMaxBaselineMigrationVersion(String[] suffixes) {
+    private String unConvertFilename(String filename, String prefix){
+        return filename.replaceFirst("V", prefix);
+    }
+
+    protected A1SqlMigrationResolver.MigrationInfo getMaxBaselineMigrationInfo(String[] suffixes) {
         ResourceNameParser resourceNameParser = new ResourceNameParser(configuration);
 
-        List<MigrationVersion> versions = resourceProvider.getResources(BASELINE_MIGRATION_PREFIX, suffixes).stream()
-            .map(lr -> getFilename(BASELINE_MIGRATION_PREFIX, lr.getFilename()))
+        Map<MigrationVersion, String> migrations = resourceProvider.getResources(BASELINE_MIGRATION_PREFIX, suffixes).stream()
+            .map(lr -> convertFilename(BASELINE_MIGRATION_PREFIX, lr.getFilename()))
             .map(resourceNameParser::parse)
-            .map(ResourceName::getVersion)
-            .sorted()
-            .collect(toList());
+            .collect(toMap(ResourceName::getVersion, ResourceName::getFilename));
 
-        return (versions.size() > 0) ? Optional.of(versions.get(versions.size() - 1)) : Optional.empty();
+        if (migrations.size() > 0) {
+            List<MigrationVersion> versions = migrations.keySet().stream()
+                .sorted()
+                .collect(Collectors.toList());
+
+            MigrationVersion version = versions.get(versions.size() - 1);
+            String script = unConvertFilename(migrations.get(version), BASELINE_MIGRATION_PREFIX);
+
+            return new MigrationInfo(version, script);
+        } else {
+            return new MigrationInfo();
+        }
     }
 
     private static boolean isSqlCallback(ResourceName result) {
@@ -135,4 +150,32 @@ public abstract class A1AbstractSqlMigrationResolver_8_0_5 implements MigrationR
 
         return null;
     }
+
+    protected static class MigrationInfo {
+        private final MigrationVersion migration;
+        private final String script;
+
+        public MigrationInfo(MigrationVersion migration, String script) {
+            this.migration = migration;
+            this.script = script;
+        }
+
+        public MigrationInfo(String version, String script) {
+            this(MigrationVersion.fromVersion(version), script);
+        }
+
+        public MigrationInfo() {
+            this.migration = null;
+            this.script = null;
+        }
+
+        public Optional<MigrationVersion> getMigration() {
+            return Optional.ofNullable(migration);
+        }
+
+        public String getScript() {
+            return script;
+        }
+    }
+
 }

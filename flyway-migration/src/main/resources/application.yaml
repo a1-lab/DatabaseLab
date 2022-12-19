@@ -1,3 +1,7 @@
+logging:
+  level:
+    com.dnas.redbox.migration: DEBUG
+
 spring:
   datasource:
     url: jdbc:postgresql://localhost/test_db
@@ -7,3 +11,4 @@ spring:
     locations: "classpath:db/migration"
     #https://flywaydb.org/documentation/configuration/parameters/baselineOnMigrate
     baselineOnMigrate: true
+    skipDefaultResolvers: true
